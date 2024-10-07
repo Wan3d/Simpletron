@@ -1,4 +1,3 @@
-
 import java.util.Scanner;
 
 /**
@@ -17,7 +16,7 @@ public class Simpletron extends SimpletronOperationCodes {
 
     /**
      * The <code>run</code> method will start Simpletron, display the welcome
-     * message and then go strait into SML execution.
+     * message and then go straight into SML execution.
      *
      * @return void
      */
@@ -34,36 +33,41 @@ public class Simpletron extends SimpletronOperationCodes {
     private void welcomeMessage() {
         System.out.println("***            Welcome to Simpletron!           ***");
         System.out.println("*** Please enter your program, one instruction  ***");
-        System.out.println("*** (or data word) at a time. I will display    ***");
-        System.out.println("*** the location number and a question mark (?) ***");
-        System.out.println("*** You then type the word for that location.   ***");
-        System.out.println("*** Type -99999 to stop entering your program.  ***");
+        System.out.println("*** (or data word) at a time in hexadecimal.    ***");
+        System.out.println("*** I will display the location number and a    ***");
+        System.out.println("*** question mark (?). You then type the word   ***");
+        System.out.println("*** for that location. Type -99999 to stop.     ***");
     }
 
     private void execute() {
         Scanner codeInputter = new Scanner(System.in);
-        int instructionInput = 0;
+        String instructionInput;
         int memoryPointer = 0;
 
         do {
-            //Output the code input prompt
+            // Output the code input prompt
             System.out.printf("%02d ? ", memoryPointer);
-            //Take the user input and assign it to the input var.
-            instructionInput = codeInputter.nextInt();
-            //place the input into the correct memory location
-            memory[memoryPointer] = instructionInput;
-            //Increment the pointer by one
-            memoryPointer++;
-        } while (instructionInput != -99999);
+            // Take the user input and assign it to the input var, in hex
+            instructionInput = codeInputter.next();
+
+            // Check for the termination input (-99999 in hex is FFFF9FFF)
+            if (!instructionInput.equalsIgnoreCase("FFFF9FFF")) {
+                // Convert the input to an integer (hex input)
+                memory[memoryPointer] = Integer.parseInt(instructionInput, 16);
+                // Increment the pointer by one
+                memoryPointer++;
+            }
+
+        } while (!instructionInput.equalsIgnoreCase("FFFF9FFF"));
 
         System.out.printf("\n%s\n%s\n\n", "***  Program loading complete ***",
-                "*** Program excution begins ***");
+                "*** Program execution begins ***");
 
         while (run) {
             loadCode();
             operations(operationCode, operand);
         }
-
+        codeInputter.close();
         System.exit(0);
     }
 
@@ -76,12 +80,6 @@ public class Simpletron extends SimpletronOperationCodes {
      */
     private void loadCode() {
         instructionRegister = memory[instructionCounter];
-
-        operationCode = instructionRegister / 100;
-        operand = instructionRegister % 100;
-
-        instructionRegister = memory[instructionCounter];
-
         operationCode = instructionRegister / 100;
         operand = instructionRegister % 100;
     }
@@ -99,72 +97,70 @@ public class Simpletron extends SimpletronOperationCodes {
 
         switch (operationCode) { //Start switch
 
-            //Operations for reading input from the user
+            // Operations for reading input from the user
             case READ:
                 Scanner read = new Scanner(System.in);
-                System.out.print("Enter a number: ");
-                int number = read.nextInt();
-                memory[operand] = number;
+                System.out.print("Enter a number (hexadecimal): ");
+                String hexNumber = read.next();
+                memory[operand] = Integer.parseInt(hexNumber, 16);
                 break;
 
-            //Operations for outputting to the user
+            // Operations for outputting to the user
             case WRITE:
-                System.out.println(memory[operand]);
+                System.out.println(Integer.toHexString(memory[operand]).toUpperCase());
                 break;
 
-            //Load the value found in memory into the accumulator
+            // Load the value found in memory into the accumulator
             case LOAD:
                 accumulator = memory[operand];
                 break;
 
-            //Put the value in the accumlator in to memroy
+            // Put the value in the accumulator into memory
             case STORE:
                 memory[operand] = accumulator;
                 break;
 
-            //Add the value in the accumulator and a value from memroy
+            // Add the value in the accumulator and a value from memory
             case ADD:
                 accumulator += memory[operand];
                 break;
 
-            //Subtract the value in the accumulator and a value in memory
+            // Subtract the value in the accumulator and a value in memory
             case SUBTRACT:
                 accumulator -= memory[operand];
                 break;
 
-            //Divide the value in the accumulator by a value in memory
+            // Divide the value in the accumulator by a value in memory
             case DIVIDE:
-                //Can't divide by zero.
+                // Can't divide by zero.
                 if (memory[operand] == 0) {
                     System.out.printf("\n%s\n%s\n", "*** CANNOT DIVIDE BY ZERO ***", "*** EXITING NOW ***");
                     System.exit(-1);
                 } else {
                     accumulator /= memory[operand];
-                    break;
                 }
+                break;
 
-            //Mulitply the value in the accumulator by a value in memory
+            // Multiply the value in the accumulator by a value in memory
             case MULITPLY:
                 accumulator *= memory[operand];
                 break;
 
             case REMAINDER:
-
                 accumulator %= memory[operand];
                 break;
 
-            case EXPONENTIATION:
-            
+            case EXPONENT:
                 accumulator = (int) Math.pow(accumulator, memory[operand]);
                 break;
-                
-            //Branc to a specific memory location
+
+            // Branch to a specific memory location
             case BRANCH:
                 instructionCounter = operand;
                 branching = true;
                 break;
 
-            //Branch to a memory location if the accumulator is less than zero
+            // Branch to a memory location if the accumulator is less than zero
             case BRANCHNEG:
                 if (accumulator < 0) {
                     instructionCounter = operand;
@@ -172,7 +168,7 @@ public class Simpletron extends SimpletronOperationCodes {
                 }
                 break;
 
-            //Branch to a memroy location if the accumulator is zero
+            // Branch to a memory location if the accumulator is zero
             case BRANCHZERO:
                 if (accumulator == 0) {
                     instructionCounter = operand;
@@ -180,25 +176,19 @@ public class Simpletron extends SimpletronOperationCodes {
                 }
                 break;
 
-            //Finsh processing
+            // Finish processing
             case HALT:
                 System.out.println("Processing complete...");
                 run = false;
                 memoryDump();
                 break;
 
-        } //End switch
+        } // End switch
 
-        /*
-         * While I was testing, I noticed that if I neede to branch to a lower
-         * memory location, the instruction counter would will increment. To
-         * solvie this issue I added the boolean 'branch' var. Only when the
-         * Simpletron is not branching, will the counter increment.
-         */
         if (!branching) {
             instructionCounter++;
         }
-    } //End of operations method
+    }
 
     /**
      * Outputs the values found in the <code>memory</code>
@@ -206,15 +196,12 @@ public class Simpletron extends SimpletronOperationCodes {
      * @return void
      */
     private void memoryDump() {
-        int tens, ones;
+        System.out.printf("\t%02X\t%02X\t%02X\t%02X\t%02X\t%02X\t%02X\t%02X\t%02X\t%02X\n", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-//        System.out.printf("%s\t%04d\n", "Accumlator", acculator);
-        System.out.printf("\t%02d\t%02d\t%02d\t%02d\t%02d\t%02d\t%02d\t%02d\t%02d\t%02d\n", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-
-        for (tens = 0; tens < 1000; tens += 10) {
-            System.out.printf("%02d\t", tens);
-            for (ones = 0; ones < 10; ones++) {
-                System.out.printf("%04d\t", memory[tens + ones]);
+        for (int tens = 0; tens < 1000; tens += 10) {
+            System.out.printf("%02X\t", tens);
+            for (int ones = 0; ones < 10; ones++) {
+                System.out.printf("%04X\t", memory[tens + ones]);
             }
             System.out.println();
         }

@@ -1,10 +1,10 @@
 
-
 /**
  * @author Kurt P
  * @version 1.0.0.01082013
  */
 public abstract class SimpletronOperationCodes {
+
     //Read and write operations
     protected static final int READ = 10;
     protected static final int WRITE = 11;
@@ -19,7 +19,7 @@ public abstract class SimpletronOperationCodes {
     protected static final int DIVIDE = 32;
     protected static final int MULITPLY = 33;
     protected static final int REMAINDER = 34;
-    protected static final int EXPONENTIATION = 35;
+    protected static final int EXPONENT = 35;
 
     //Transfer of controle operations
     protected static final int BRANCH = 40;
